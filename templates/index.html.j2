@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="{{ meta.description }}">
+    <title>{{ meta.title }}</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="{{ company.name }} home">
+        <span class="brand-mark">{{ company.initials }}</span>
+        <span class="brand-text">{{ company.name }}</span>
+      </a>
+
+      <input class="nav-checkbox" type="checkbox" id="nav-toggle" aria-hidden="true">
+      <label class="nav-toggle" for="nav-toggle" aria-label="Menu">
+        <span class="nav-toggle-line"></span>
+        <span class="sr-only">Menu</span>
+      </label>
+
+      <nav class="site-nav" id="site-nav">
+        {% for item in nav %}
+        <a href="{{ item.href }}">{{ item.label }}</a>
+        {% endfor %}
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-label="SDVOSB technology procurement">
+        <img class="hero-image" src="assets/hero-procurement.png" alt="Modern government technology procurement workspace">
+        <div class="hero-shade"></div>
+        <div class="hero-content">
+          <p class="eyebrow">{{ hero.eyebrow }}</p>
+          <h1>{{ hero.heading }}</h1>
+          <p class="hero-copy">{{ hero.copy }}</p>
+          <div class="hero-actions">
+            {% for action in hero.actions %}
+            <a class="button button-{{ action.style | default('secondary') }}" href="{{ action.href }}">{{ action.label }}</a>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+
+      <section class="section intro-band" aria-label="Business summary">
+        <div class="section-inner intro-grid">
+          <div>
+            <p class="section-kicker">{{ intro.kicker }}</p>
+            <h2>{{ intro.heading }}</h2>
+          </div>
+          <p>{{ intro.copy }}</p>
+        </div>
+      </section>
+
+      <section class="section" id="capabilities">
+        <div class="section-inner">
+          <div class="section-heading">
+            <p class="section-kicker">{{ capabilities.kicker }}</p>
+            <h2>{{ capabilities.heading }}</h2>
+          </div>
+
+          <div class="capability-grid">
+            {% for item in capabilities["items"] %}
+            <article class="capability-card">
+              <span class="card-code">{{ "%02d" | format(loop.index) }}</span>
+              <h3>{{ item.title }}</h3>
+              <p>{{ item.copy }}</p>
+            </article>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+
+      <section class="section contract-band" id="contracting">
+        <div class="section-inner">
+          <div class="section-heading">
+            <p class="section-kicker">{{ contracting.kicker }}</p>
+            <h2>{{ contracting.heading }}</h2>
+          </div>
+
+          <div class="data-panel">
+            <dl class="data-list">
+              {% for item in contracting["items"] %}
+              <div>
+                <dt>{{ item.label }}</dt>
+                <dd>{{ item.value }}</dd>
+              </div>
+              {% endfor %}
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="approach">
+        <div class="section-inner approach-layout">
+          <div class="section-heading">
+            <p class="section-kicker">{{ approach.kicker }}</p>
+            <h2>{{ approach.heading }}</h2>
+          </div>
+          <ol class="process-list">
+            {% for step in approach.steps %}
+            <li>
+              <span>{{ step.title }}</span>
+              <p>{{ step.copy }}</p>
+            </li>
+            {% endfor %}
+          </ol>
+        </div>
+      </section>
+
+      <section class="section contact-band" id="contact">
+        <div class="section-inner contact-layout">
+          <div>
+            <p class="section-kicker">{{ contact.kicker }}</p>
+            <h2>{{ contact.heading }}</h2>
+            <p>{{ contact.copy }}</p>
+          </div>
+          <div class="contact-panel">
+            <a class="contact-link" href="mailto:{{ company.email }}?subject=Federal%20IT%20Procurement%20Inquiry">{{ company.email }}</a>
+            <a class="contact-link" href="tel:{{ company.phone_href }}">{{ company.phone_display }}</a>
+            <p>{{ company.location }}</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>&copy; {{ build_year }} {{ company.legal_name }}. All rights reserved.</p>
+    </footer>
+  </body>
+</html>

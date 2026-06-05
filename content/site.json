@@ -1,0 +1,101 @@
+{
+  "company": {
+    "name": "Hallas Tech",
+    "legal_name": "Hallas, LLC",
+    "initials": "HT",
+    "domain": "www.hallastech.com",
+    "email": "contact@hallastech.com",
+    "phone_display": "(301) 667-0424",
+    "phone_href": "+13016670424",
+    "location": "Downtown Memphis, TN | Maryland business registration"
+  },
+  "meta": {
+    "title": "Hallas Tech | SDVOSB Technology Procurement",
+    "description": "Owner-operated SDVOSB technology procurement partner for federal software licensing, cloud subscriptions, and Red Hat solutions."
+  },
+  "nav": [
+    { "label": "Capabilities", "href": "#capabilities" },
+    { "label": "Contracting", "href": "#contracting" },
+    { "label": "Approach", "href": "#approach" },
+    { "label": "Contact", "href": "#contact" }
+  ],
+  "hero": {
+    "eyebrow": "SDVOSB | Software Licensing | Federal IT Procurement",
+    "heading": "Hallas Tech",
+    "copy": "Owner-operated technology procurement support for agencies and primes that need responsive software sourcing, accurate channel quotes, and disciplined small-business execution.",
+    "actions": [
+      {
+        "label": "Contact",
+        "href": "mailto:contact@hallastech.com?subject=Federal%20IT%20Procurement%20Inquiry",
+        "style": "primary"
+      },
+      {
+        "label": "Contracting Data",
+        "href": "#contracting",
+        "style": "secondary"
+      }
+    ]
+  },
+  "intro": {
+    "kicker": "Focused support",
+    "heading": "Procurement help for software-heavy federal buys.",
+    "copy": "Built for focused capture work: Adobe, Red Hat, cloud subscriptions, commercial software renewals, and reseller coordination where quote accuracy and fast turnaround matter."
+  },
+  "capabilities": {
+    "kicker": "Capabilities",
+    "heading": "What the business can support",
+    "items": [
+      {
+        "title": "Software Licensing",
+        "copy": "Commercial software sourcing, renewal coordination, quote comparison, and authorized-channel follow-through."
+      },
+      {
+        "title": "Federal Resale Support",
+        "copy": "Small-business quote packages for brand-name software, SaaS subscriptions, and commodity IT procurements."
+      },
+      {
+        "title": "Prime Teaming",
+        "copy": "SDVOSB participation for primes needing a disciplined partner for software procurement and vendor coordination."
+      },
+      {
+        "title": "Bid Readiness",
+        "copy": "Compliance checks, line-item quote structure, distributor outreach, and document control for short-turn RFQs."
+      }
+    ]
+  },
+  "contracting": {
+    "kicker": "Contracting Data",
+    "heading": "Ready-to-fill profile fields",
+    "items": [
+      { "label": "Socioeconomic status", "value": "Service-Disabled Veteran-Owned Small Business" },
+      { "label": "SAM.gov status", "value": "In Progress" },
+      { "label": "UEI", "value": "N7ZQD63DMZZ3" },
+      { "label": "CAGE", "value": "96KCS" },
+      { "label": "Core NAICS", "value": "513210, 541519, 423430" },
+      { "label": "Relevant PSCs", "value": "7A21, DA10, 7F20, DF10" }
+    ]
+  },
+  "approach": {
+    "kicker": "Approach",
+    "heading": "Small enough to move quickly. Structured enough to be useful.",
+    "steps": [
+      {
+        "title": "Scope",
+        "copy": "Confirm the exact SKU, quantity, term, agency, set-aside, and submission rule before quoting."
+      },
+      {
+        "title": "Source",
+        "copy": "Work through authorized distributors and capture the program, level, and quote-validity assumptions."
+      },
+      {
+        "title": "Submit",
+        "copy": "Package the quote with clear line items, certifications, representations, and contact details."
+      }
+    ]
+  },
+  "contact": {
+    "kicker": "Contact",
+    "heading": "Send a procurement or teaming request.",
+    "copy": "Include the solicitation number, required products, submission deadline, and whether you need prime or subcontract support."
+  }
+}
