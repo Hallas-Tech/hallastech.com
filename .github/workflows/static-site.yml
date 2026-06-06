@@ -1,0 +1,98 @@
+name: Static Site
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+  pull_request:
+    branches:
+      - dev
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: static-site-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  AWS_REGION: us-east-2
+  CLOUDFRONT_REGION: us-east-1
+  S3_BUCKET_NAME: www.hallastech.com
+  CLOUDFRONT_DISTRIBUTION_ID: E33Q8QG2BXCEVO
+  STACK_NAME: hallastech-static-site
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  validate:
+    name: Render and validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install Python dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Validate content JSON
+        run: python -m json.tool content/site.json >/dev/null
+
+      - name: Validate shell scripts
+        run: bash -n scripts/deploy-infra.sh scripts/sync-site.sh
+
+      - name: Render site
+        run: ./scripts/render_site.py
+
+      - name: Confirm generated HTML is committed
+        run: git diff --exit-code index.html
+
+  deploy:
+    name: Deploy to AWS
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://www.hallastech.com
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install Python dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Render site
+        run: ./scripts/render_site.py
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Sync static files to S3 and invalidate CloudFront
+        env:
+          REGION: ${{ env.AWS_REGION }}
+          CLOUDFRONT_REGION: ${{ env.CLOUDFRONT_REGION }}
+          BUCKET_NAME: ${{ env.S3_BUCKET_NAME }}
+          DISTRIBUTION_ID: ${{ env.CLOUDFRONT_DISTRIBUTION_ID }}
+        run: ./scripts/sync-site.sh

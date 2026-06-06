@@ -14,17 +14,23 @@
         <span class="brand-text">{{ company.name }}</span>
       </a>
 
-      <input class="nav-checkbox" type="checkbox" id="nav-toggle" aria-hidden="true">
-      <label class="nav-toggle" for="nav-toggle" aria-label="Menu">
-        <span class="nav-toggle-line"></span>
-        <span class="sr-only">Menu</span>
-      </label>
-
-      <nav class="site-nav" id="site-nav">
+      <nav class="site-nav site-nav-desktop" id="site-nav">
         {% for item in nav %}
         <a href="{{ item.href }}">{{ item.label }}</a>
         {% endfor %}
       </nav>
+
+      <details class="mobile-nav">
+        <summary class="nav-menu-button" aria-label="Menu">
+          <span class="nav-toggle-line"></span>
+          <span class="sr-only">Menu</span>
+        </summary>
+        <nav class="site-nav site-nav-mobile" aria-label="Mobile navigation">
+          {% for item in nav %}
+          <a href="{{ item.href }}">{{ item.label }}</a>
+          {% endfor %}
+        </nav>
+      </details>
     </header>
 
     <main id="top">
@@ -34,7 +40,7 @@
         <div class="hero-content">
           <p class="eyebrow">{{ hero.eyebrow }}</p>
           <h1>{{ hero.heading }}</h1>
-          <p class="hero-copy">{{ hero.copy }}</p>
+          <p class="hero-copy">{{ hero["copy"] }}</p>
           <div class="hero-actions">
             {% for action in hero.actions %}
             <a class="button button-{{ action.style | default('secondary') }}" href="{{ action.href }}">{{ action.label }}</a>
@@ -49,7 +55,7 @@
             <p class="section-kicker">{{ intro.kicker }}</p>
             <h2>{{ intro.heading }}</h2>
           </div>
-          <p>{{ intro.copy }}</p>
+          <p>{{ intro["copy"] }}</p>
         </div>
       </section>
 
@@ -65,7 +71,7 @@
             <article class="capability-card">
               <span class="card-code">{{ "%02d" | format(loop.index) }}</span>
               <h3>{{ item.title }}</h3>
-              <p>{{ item.copy }}</p>
+              <p>{{ item["copy"] }}</p>
             </article>
             {% endfor %}
           </div>
@@ -102,7 +108,7 @@
             {% for step in approach.steps %}
             <li>
               <span>{{ step.title }}</span>
-              <p>{{ step.copy }}</p>
+              <p>{{ step["copy"] }}</p>
             </li>
             {% endfor %}
           </ol>
@@ -114,7 +120,7 @@
           <div>
             <p class="section-kicker">{{ contact.kicker }}</p>
             <h2>{{ contact.heading }}</h2>
-            <p>{{ contact.copy }}</p>
+            <p>{{ contact["copy"] }}</p>
           </div>
           <div class="contact-panel">
             <a class="contact-link" href="mailto:{{ company.email }}?subject=Federal%20IT%20Procurement%20Inquiry">{{ company.email }}</a>
@@ -128,5 +134,13 @@
     <footer class="site-footer">
       <p>&copy; {{ build_year }} {{ company.legal_name }}. All rights reserved.</p>
     </footer>
+
+    <script>
+      document.querySelectorAll(".site-nav-mobile a").forEach((link) => {
+        link.addEventListener("click", () => {
+          link.closest(".mobile-nav")?.removeAttribute("open");
+        });
+      });
+    </script>
   </body>
 </html>

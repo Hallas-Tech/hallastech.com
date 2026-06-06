@@ -1,6 +1,17 @@
 # AWS Static Hosting Deployment - `www.hallastech.com`
 
-Target architecture:
+Current production target:
+
+- Existing S3 website bucket: `www.hallastech.com`
+- Bucket region: `us-east-2`
+- Existing CloudFront distribution: `E33Q8QG2BXCEVO`
+- CloudFront domain: `d6fefspsedmg7.cloudfront.net`
+- Existing ACM certificate: `arn:aws:acm:us-east-1:381492120543:certificate/647a1df3-6f9d-4d89-9f58-0d341b3ad4a2`
+- DNS provider: Hover
+
+Use this existing target for now. Do not create a new `www.hallastech.com` CloudFront distribution unless you first remove or move the `www.hallastech.com` alternate domain name from the existing distribution.
+
+Optional future architecture:
 
 - Private S3 bucket for static files.
 - CloudFront distribution for HTTPS, CDN, and public access.
@@ -8,12 +19,14 @@ Target architecture:
 - ACM certificate for `www.hallastech.com`.
 - Optional Route 53 `A` and `AAAA` alias records.
 
-Current DNS lookup from this workspace:
+Current DNS and CloudFront state:
 
 - `www.hallastech.com` points to `d6fefspsedmg7.cloudfront.net`.
 - `hallastech.com` points to `216.40.34.41`.
+- `www.hallastech.com` is already configured as an alias on CloudFront distribution `E33Q8QG2BXCEVO`.
+- That distribution uses origin `www.hallastech.com.s3-website.us-east-2.amazonaws.com`.
 
-That means the old `www` site likely already uses CloudFront. Do not delete the old distribution or DNS record until the new CloudFront distribution is created, files are uploaded, and the new distribution is verified.
+That means the current `www` site already uses CloudFront and an S3 website bucket. The simplest deployment path is to upload new static files to that existing bucket and invalidate that existing distribution.
 
 Important: CloudFront does not allow the same alternate domain name on two distributions at the same time. If the old distribution still has `www.hallastech.com` configured as an alias, creating a new distribution for `www.hallastech.com` may fail with a `CNAMEAlreadyExists` style error.
 
@@ -26,9 +39,33 @@ If that happens, use one of these cutover paths:
 ## Prerequisites
 
 - AWS CLI installed and configured.
-- Permission to create S3 buckets, CloudFront distributions, ACM certificates, and Route 53 records.
-- Route 53 hosted zone ID for `hallastech.com`, if DNS is managed in Route 53.
-- Deploy the CloudFormation stack in `us-east-1`. CloudFront requires ACM viewer certificates in `us-east-1`.
+- Permission to write objects to S3 bucket `www.hallastech.com`.
+- Permission to create CloudFront invalidations for distribution `E33Q8QG2BXCEVO`.
+- For the optional future stack, permission to create S3 buckets, CloudFront distributions, ACM certificates, and Route 53 records.
+- For the optional future stack, deploy CloudFormation in `us-east-1`. CloudFront requires ACM viewer certificates in `us-east-1`.
+
+## Upload Site Files To Existing AWS Resources
+
+From this directory:
+
+```bash
+./scripts/render_site.py
+
+REGION=us-east-2 \
+BUCKET_NAME=www.hallastech.com \
+DISTRIBUTION_ID=E33Q8QG2BXCEVO \
+./scripts/sync-site.sh
+```
+
+This uploads only:
+
+- `index.html`
+- `styles.css`
+- `assets/*`
+
+It then creates a CloudFront invalidation for `/*`.
+
+## Optional New Infrastructure
 
 Find the hosted zone ID:
 
@@ -78,7 +115,7 @@ ACM_CERTIFICATE_ARN=arn:aws:acm:us-east-1:ACCOUNT_ID:certificate/CERTIFICATE_ID 
 
 Then update DNS wherever the domain is hosted by pointing `www.hallastech.com` to the CloudFront domain output from the stack.
 
-## Upload Site Files
+## Upload Site Files To New Stack
 
 After the CloudFormation stack is complete:
 
@@ -118,6 +155,15 @@ Edit `content/site.json`, `templates/index.html.j2`, `styles.css`, or assets, th
 ./scripts/render_site.py
 ./scripts/sync-site.sh
 ```
+
+For normal production updates, prefer the GitHub Actions flow:
+
+1. Push changes to `dev`.
+2. Verify the `Static Site` workflow passes.
+3. Merge `dev` into `main`.
+4. The `main` workflow deploys to S3/CloudFront.
+
+GitHub Actions AWS setup is documented in `docs/aws/github-actions-oidc.md`.
 
 ## Cost Profile
 
