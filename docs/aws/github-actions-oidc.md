@@ -46,7 +46,7 @@ Trust policy:
       "Condition": {
         "StringEquals": {
           "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
-          "token.actions.githubusercontent.com:sub": "repo:Hallas-Tech/hallastech.com:ref:refs/heads/main"
+          "token.actions.githubusercontent.com:sub": "repo:Hallas-Tech/hallastech.com:environment:production"
         }
       }
     }
@@ -56,7 +56,13 @@ Trust policy:
 
 Replace `ACCOUNT_ID` with your AWS account ID.
 
-This trust policy allows deployment only from the `main` branch of `Hallas-Tech/hallastech.com`.
+This trust policy matches the deploy job's GitHub environment, `production`. The workflow itself is still restricted to `main` by:
+
+```yaml
+if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+```
+
+If you remove the `environment: production` block from the workflow, change the trust policy subject back to `repo:Hallas-Tech/hallastech.com:ref:refs/heads/main`.
 
 ## 3. Attach Permissions
 
