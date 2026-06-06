@@ -1,0 +1,220 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Static S3 + CloudFront + ACM website for Hallas Tech.
+
+Parameters:
+  DomainName:
+    Type: String
+    Default: www.hallastech.com
+    Description: Fully qualified domain name for the website.
+
+  HostedZoneId:
+    Type: String
+    Default: ""
+    Description: Route 53 hosted zone ID for the parent zone. Required when creating the certificate or DNS record automatically.
+
+  CreateCertificate:
+    Type: String
+    Default: "true"
+    AllowedValues:
+      - "true"
+      - "false"
+    Description: Create an ACM certificate using DNS validation. Deploy this stack in us-east-1 for CloudFront certificates.
+
+  AcmCertificateArn:
+    Type: String
+    Default: ""
+    Description: Existing ACM certificate ARN in us-east-1. Required if CreateCertificate is false.
+
+  CreateDnsRecord:
+    Type: String
+    Default: "true"
+    AllowedValues:
+      - "true"
+      - "false"
+    Description: Create Route 53 A and AAAA alias records for DomainName.
+
+  PriceClass:
+    Type: String
+    Default: PriceClass_100
+    AllowedValues:
+      - PriceClass_100
+      - PriceClass_200
+      - PriceClass_All
+    Description: CloudFront price class. PriceClass_100 is cheapest and usually enough for a small US business site.
+
+Rules:
+  RequireHostedZoneForManagedCertificate:
+    RuleCondition: !Equals [!Ref CreateCertificate, "true"]
+    Assertions:
+      - Assert: !Not [!Equals [!Ref HostedZoneId, ""]]
+        AssertDescription: HostedZoneId is required when CreateCertificate is true.
+
+  RequireCertificateArnWhenNotCreating:
+    RuleCondition: !Equals [!Ref CreateCertificate, "false"]
+    Assertions:
+      - Assert: !Not [!Equals [!Ref AcmCertificateArn, ""]]
+        AssertDescription: AcmCertificateArn is required when CreateCertificate is false.
+
+  RequireHostedZoneForDnsRecord:
+    RuleCondition: !Equals [!Ref CreateDnsRecord, "true"]
+    Assertions:
+      - Assert: !Not [!Equals [!Ref HostedZoneId, ""]]
+        AssertDescription: HostedZoneId is required when CreateDnsRecord is true.
+
+Conditions:
+  ShouldCreateCertificate: !Equals [!Ref CreateCertificate, "true"]
+  ShouldCreateDnsRecord: !Equals [!Ref CreateDnsRecord, "true"]
+
+Resources:
+  SiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+
+  SiteCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Condition: ShouldCreateCertificate
+    Properties:
+      DomainName: !Ref DomainName
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: !Ref DomainName
+          HostedZoneId: !Ref HostedZoneId
+
+  OriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub ${AWS::StackName}-s3-oac
+        Description: !Sub Origin access control for ${DomainName}
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  SiteDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Aliases:
+          - !Ref DomainName
+        Comment: !Sub Static website for ${DomainName}
+        DefaultRootObject: index.html
+        Enabled: true
+        HttpVersion: http2and3
+        IPV6Enabled: true
+        PriceClass: !Ref PriceClass
+        ViewerCertificate:
+          AcmCertificateArn: !If
+            - ShouldCreateCertificate
+            - !Ref SiteCertificate
+            - !Ref AcmCertificateArn
+          MinimumProtocolVersion: TLSv1.2_2021
+          SslSupportMethod: sni-only
+        Origins:
+          - Id: s3-origin
+            DomainName: !GetAtt SiteBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt OriginAccessControl.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ""
+        DefaultCacheBehavior:
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          CachedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+          Compress: true
+          TargetOriginId: s3-origin
+          ViewerProtocolPolicy: redirect-to-https
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 0
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 0
+
+  SiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref SiteBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowCloudFrontRead
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub
+              - ${BucketArn}/*
+              - BucketArn: !GetAtt SiteBucket.Arn
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${SiteDistribution}
+
+  DnsRecordA:
+    Type: AWS::Route53::RecordSet
+    Condition: ShouldCreateDnsRecord
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref DomainName
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt SiteDistribution.DomainName
+        HostedZoneId: Z2FDTNDATAQYW2
+        EvaluateTargetHealth: false
+
+  DnsRecordAAAA:
+    Type: AWS::Route53::RecordSet
+    Condition: ShouldCreateDnsRecord
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref DomainName
+      Type: AAAA
+      AliasTarget:
+        DNSName: !GetAtt SiteDistribution.DomainName
+        HostedZoneId: Z2FDTNDATAQYW2
+        EvaluateTargetHealth: false
+
+Outputs:
+  BucketName:
+    Description: S3 bucket that receives the static website files.
+    Value: !Ref SiteBucket
+
+  DistributionId:
+    Description: CloudFront distribution ID.
+    Value: !Ref SiteDistribution
+
+  DistributionDomainName:
+    Description: CloudFront distribution domain name.
+    Value: !GetAtt SiteDistribution.DomainName
+
+  WebsiteUrl:
+    Description: Public website URL.
+    Value: !Sub https://${DomainName}
+
+  CertificateArn:
+    Description: ACM certificate used by CloudFront.
+    Value: !If
+      - ShouldCreateCertificate
+      - !Ref SiteCertificate
+      - !Ref AcmCertificateArn
