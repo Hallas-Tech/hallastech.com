@@ -65,7 +65,7 @@
   },
   "contracting": {
     "kicker": "Contracting Data",
-    "heading": "Ready to fill profile fields",
+    "heading": "",
     "items": [
       { "label": "Socioeconomic status", "value": "Service-Disabled Veteran-Owned Small Business" },
       { "label": "SAM.gov status", "value": "In Progress" },
