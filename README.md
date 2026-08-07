@@ -70,10 +70,7 @@ Short version from this directory:
 
 ```bash
 ./scripts/render_site.py
-REGION=us-east-2 \
-BUCKET_NAME=www.hallastech.com \
-DISTRIBUTION_ID=E33Q8QG2BXCEVO \
-./scripts/sync-site.sh
+./scripts/deploy-site.bash
 ```
 
 The optional new-infrastructure stack is defined in `aws/static-site.yaml`, but production deploys currently use the existing S3 bucket and CloudFront distribution.
@@ -95,8 +92,5 @@ After editing `content/site.json`, `templates/index.html.j2`, `styles.css`, or f
 
 ```bash
 ./scripts/render_site.py
-REGION=us-east-2 \
-BUCKET_NAME=www.hallastech.com \
-DISTRIBUTION_ID=E33Q8QG2BXCEVO \
-./scripts/sync-site.sh
+./scripts/deploy-site.bash
 ```
