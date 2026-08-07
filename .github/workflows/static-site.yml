@@ -20,7 +20,6 @@ env:
   CLOUDFRONT_REGION: us-east-1
   S3_BUCKET_NAME: www.hallastech.com
   CLOUDFRONT_DISTRIBUTION_ID: E33Q8QG2BXCEVO
-  STACK_NAME: hallastech-static-site
   PYTHON_VERSION: "3.12"
 
 jobs:
@@ -47,7 +46,7 @@ jobs:
         run: python -m json.tool content/site.json >/dev/null
 
       - name: Validate shell scripts
-        run: bash -n scripts/deploy-infra.sh scripts/sync-site.sh
+        run: bash -n scripts/deploy-infra.sh scripts/deploy-site.bash
 
       - name: Render site
         run: ./scripts/render_site.py
@@ -95,4 +94,4 @@ jobs:
           CLOUDFRONT_REGION: ${{ env.CLOUDFRONT_REGION }}
           BUCKET_NAME: ${{ env.S3_BUCKET_NAME }}
           DISTRIBUTION_ID: ${{ env.CLOUDFRONT_DISTRIBUTION_ID }}
-        run: ./scripts/sync-site.sh
+        run: ./scripts/deploy-site.bash

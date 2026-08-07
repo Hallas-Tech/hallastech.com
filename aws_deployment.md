@@ -50,11 +50,7 @@ From this directory:
 
 ```bash
 ./scripts/render_site.py
-
-REGION=us-east-2 \
-BUCKET_NAME=www.hallastech.com \
-DISTRIBUTION_ID=E33Q8QG2BXCEVO \
-./scripts/sync-site.sh
+./scripts/deploy-site.bash
 ```
 
 This uploads only:
@@ -120,8 +116,23 @@ Then update DNS wherever the domain is hosted by pointing `www.hallastech.com` t
 After the CloudFormation stack is complete:
 
 ```bash
+BUCKET_NAME="$(aws cloudformation describe-stacks \
+  --region us-east-1 \
+  --stack-name hallastech-static-site \
+  --query "Stacks[0].Outputs[?OutputKey=='BucketName'].OutputValue" \
+  --output text)"
+
+DISTRIBUTION_ID="$(aws cloudformation describe-stacks \
+  --region us-east-1 \
+  --stack-name hallastech-static-site \
+  --query "Stacks[0].Outputs[?OutputKey=='DistributionId'].OutputValue" \
+  --output text)"
+
 ./scripts/render_site.py
-./scripts/sync-site.sh
+REGION=us-east-1 \
+BUCKET_NAME="$BUCKET_NAME" \
+DISTRIBUTION_ID="$DISTRIBUTION_ID" \
+./scripts/deploy-site.bash
 ```
 
 This uploads only:
@@ -153,7 +164,7 @@ Edit `content/site.json`, `templates/index.html.j2`, `styles.css`, or assets, th
 
 ```bash
 ./scripts/render_site.py
-./scripts/sync-site.sh
+./scripts/deploy-site.bash
 ```
 
 For normal production updates, prefer the GitHub Actions flow:

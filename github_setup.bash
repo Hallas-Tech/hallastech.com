@@ -5,6 +5,7 @@ ROLE_NAME="${ROLE_NAME:-hallastech-github-actions-deploy}"
 POLICY_NAME="${POLICY_NAME:-hallastech-static-site-deploy}"
 REPO="${REPO:-Hallas-Tech/hallastech.com}"
 BRANCH="${BRANCH:-main}"
+GITHUB_ENVIRONMENT="${GITHUB_ENVIRONMENT:-production}"
 BUCKET_NAME="${BUCKET_NAME:-www.hallastech.com}"
 DISTRIBUTION_ID="${DISTRIBUTION_ID:-E33Q8QG2BXCEVO}"
 OIDC_PROVIDER_HOST="${OIDC_PROVIDER_HOST:-token.actions.githubusercontent.com}"
@@ -24,7 +25,11 @@ require_command python3
 
 ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
 OIDC_PROVIDER_ARN="arn:aws:iam::${ACCOUNT_ID}:oidc-provider/${OIDC_PROVIDER_HOST}"
-ROLE_SUBJECT="repo:${REPO}:ref:refs/heads/${BRANCH}"
+if [[ -n "$GITHUB_ENVIRONMENT" ]]; then
+  ROLE_SUBJECT="repo:${REPO}:environment:${GITHUB_ENVIRONMENT}"
+else
+  ROLE_SUBJECT="repo:${REPO}:ref:refs/heads/${BRANCH}"
+fi
 
 WORK_DIR="$(mktemp -d)"
 trap 'rm -rf "$WORK_DIR"' EXIT
@@ -35,6 +40,7 @@ DEPLOY_POLICY="${WORK_DIR}/hallastech-deploy-policy.json"
 echo "AWS account: ${ACCOUNT_ID}"
 echo "GitHub repo: ${REPO}"
 echo "Deploy branch: ${BRANCH}"
+echo "GitHub environment: ${GITHUB_ENVIRONMENT:-none}"
 echo "IAM role: ${ROLE_NAME}"
 echo "S3 bucket: ${BUCKET_NAME}"
 echo "CloudFront distribution: ${DISTRIBUTION_ID}"
